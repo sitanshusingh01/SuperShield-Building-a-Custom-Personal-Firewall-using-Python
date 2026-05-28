@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuperShield — Custom Personal Firewall</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --card: #22223a;
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #2e2e4a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,26,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+    }
+    .nav-brand {
+      font-size: 1.15rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .nav-links { display: flex; gap: 1.6rem; }
+    .nav-links a { color: var(--muted); font-size: .93rem; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--accent); color: #fff;
+      padding: .45rem 1.1rem; border-radius: 6px;
+      font-size: .9rem; font-weight: 600; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; text-decoration: none; }
+    .btn-outline {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text); padding: .42rem 1rem;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 6rem 1.5rem 4rem;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,58,237,.25) 0%, transparent 70%);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(124,58,237,.18); border: 1px solid rgba(124,58,237,.35);
+      color: var(--accent2); border-radius: 100px;
+      padding: .28rem .9rem; font-size: .8rem; font-weight: 600;
+      margin-bottom: 1.4rem; letter-spacing: .04em;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800; line-height: 1.15;
+      background: linear-gradient(135deg, #fff 40%, var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 1.2rem;
+    }
+    .hero p {
+      max-width: 600px; margin: 0 auto 2.4rem;
+      color: var(--muted); font-size: 1.1rem;
+    }
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;
+      padding: 1.6rem 2rem;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: .8rem; color: var(--muted); margin-top: .1rem; }
+
+    /* SECTIONS */
+    section { padding: 5rem 1.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      text-align: center; color: var(--accent2);
+      font-size: .8rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; margin-bottom: .6rem;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(1.6rem,3vw,2.2rem);
+      font-weight: 700; margin-bottom: .8rem;
+    }
+    .section-sub {
+      text-align: center; color: var(--muted);
+      max-width: 560px; margin: 0 auto 3rem;
+    }
+
+    /* FEATURES GRID */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+    }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.6rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(124,58,237,.18); display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; }
+    .feature-card p { color: var(--muted); font-size: .9rem; }
+
+    /* TERMINAL DEMO */
+    .terminal {
+      background: #0d0d1a; border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-top: 2rem;
+    }
+    .terminal-bar {
+      background: var(--surface); padding: .7rem 1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #f59e0b; }
+    .dot-g { background: #22c55e; }
+    .terminal-title { margin-left: .6rem; color: var(--muted); font-size: .83rem; }
+    .terminal-body { padding: 1.4rem 1.6rem; }
+    .terminal-body pre {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: .85rem; line-height: 1.8; overflow-x: auto;
+    }
+    .t-prompt { color: #7c3aed; }
+    .t-cmd    { color: #e2e8f0; }
+    .t-allow  { color: #22c55e; }
+    .t-block  { color: #ef4444; }
+    .t-info   { color: #94a3b8; }
+    .t-head   { color: #f59e0b; }
+
+    /* ARCHITECTURE */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-top: 2rem;
+    }
+    .arch-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.2rem; text-align: center;
+    }
+    .arch-box .arch-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+    .arch-box h4 { font-size: .9rem; font-weight: 700; }
+    .arch-box p { font-size: .78rem; color: var(--muted); margin-top: .2rem; }
+    .arch-arrow {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 1.4rem;
+    }
+
+    /* INSTALL */
+    .install-steps { display: grid; gap: 1rem; margin-top: 2rem; }
+    .step {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.2rem 1.4rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .step-num {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--accent); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+    }
+    .step-content h4 { font-size: .95rem; font-weight: 600; margin-bottom: .3rem; }
+    .step-content code {
+      display: block; background: #0d0d1a; border: 1px solid var(--border);
+      border-radius: 6px; padding: .5rem .9rem;
+      font-family: "Consolas", monospace; font-size: .85rem;
+      color: var(--accent2); margin-top: .4rem;
+    }
+
+    /* GUI SECTION */
+    .gui-preview {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem; margin-top: 2rem;
+    }
+    .gui-header-mock {
+      background: #7c3aed; border-radius: 8px 8px 0 0;
+      padding: .8rem 1.2rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .gui-header-mock span { font-weight: 700; font-size: 1rem; }
+    .gui-body-mock {
+      background: #1e1e2e; border-radius: 0 0 8px 8px;
+      padding: 1.2rem; display: grid;
+      grid-template-columns: 180px 1fr; gap: 1rem; min-height: 200px;
+    }
+    .gui-sidebar { display: flex; flex-direction: column; gap: .6rem; }
+    .gui-stat-box {
+      background: #2a2a3e; border-radius: 8px; padding: .7rem;
+      text-align: center;
+    }
+    .gui-stat-box .lbl { font-size: .7rem; color: var(--muted); }
+    .gui-stat-box .val { font-size: 1.6rem; font-weight: 700; }
+    .gui-main { background: #2a2a3e; border-radius: 8px; padding: .8rem; }
+    .gui-row { display: flex; gap: .8rem; padding: .3rem 0; border-bottom: 1px solid #3f3f5f; font-size: .78rem; }
+    .gui-row:last-child { border-bottom: none; }
+    .tag-allow { color: #22c55e; font-weight: 700; width: 50px; }
+    .tag-block { color: #ef4444; font-weight: 700; width: 50px; }
+
+    /* STACK */
+    .stack-grid {
+      display: flex; flex-wrap: wrap; gap: .8rem;
+      justify-content: center; margin-top: 2rem;
+    }
+    .stack-badge {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 100px; padding: .4rem 1.1rem;
+      font-size: .85rem; font-weight: 600;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--muted); font-size: .88rem;
+    }
+    footer a { color: var(--accent2); }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .gui-body-mock { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">🛡 SuperShield</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#demo">Demo</a>
+    <a href="#install">Install</a>
+    <a href="#gui">GUI</a>
+    <a href="#stack">Stack</a>
+  </div>
+  <div style="display:flex;gap:.7rem">
+    <a class="btn btn-outline" href="https://github.com/sitanshusingh01/SuperShield-Building-a-Custom-Personal-Firewall-using-Python">GitHub</a>
+    <a class="btn" href="https://github.com/sitanshusingh01/SuperShield-Building-a-Custom-Personal-Firewall-using-Python/archive/refs/heads/main.zip">Download</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">College Capstone Project · Python · Cybersecurity</div>
+  <h1>SuperShield<br/>Custom Personal Firewall</h1>
+  <p>A Python-based personal firewall prototype — real-time packet monitoring, IP blocking, website filtering, and a live GUI dashboard built from scratch.</p>
+  <div class="hero-buttons">
+    <a class="btn" href="https://github.com/sitanshusingh01/SuperShield-Building-a-Custom-Personal-Firewall-using-Python">
+      View on GitHub
+    </a>
+    <a class="btn btn-outline" href="#install">Get Started</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num">15+</div><div class="stat-label">Source Files</div></div>
+  <div class="stat-item"><div class="stat-num">7</div><div class="stat-label">Core Modules</div></div>
+  <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">CLI Commands</div></div>
+  <div class="stat-item"><div class="stat-num">MIT</div><div class="stat-label">License</div></div>
+</div>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--surface)">
+  <div class="container">
+    <div class="section-label">What it does</div>
+    <h2 class="section-title">Core Features</h2>
+    <p class="section-sub">A complete personal firewall prototype demonstrating key network security concepts in clean, modular Python.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <h3>Live Packet Sniffing</h3>
+        <p>Captures network packets in real time using Scapy. Extracts source IP, destination IP, protocol, and packet length.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚫</div>
+        <h3>IP Blocking</h3>
+        <p>Persistent blocklist of individual IPs and CIDR ranges. Blocked packets are denied instantly and logged with timestamps.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3>Rule Engine</h3>
+        <p>Modular, extensible rule system supporting per-protocol, per-port, and per-IP filtering loaded from a JSON config.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Website Blocking</h3>
+        <p>Redirects domains to localhost via the OS hosts file. Works on Windows and Linux without any browser extension.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Traffic Logging</h3>
+        <p>Structured log file with timestamps, source/destination, protocol, and allow/block decision for every packet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🖥️</div>
+        <h3>GUI Dashboard</h3>
+        <p>Full tkinter desktop interface with live packet table, statistics panel, blocked IP management, and log viewer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Statistics Tracking</h3>
+        <p>Running totals of packets inspected, allowed, and blocked, broken down by protocol with uptime counter.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⌨️</div>
+        <h3>Full CLI Interface</h3>
+        <p>10 CLI commands for managing IPs, websites, and interfaces — no need to edit config files by hand.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL DEMO -->
+<section id="demo">
+  <div class="container">
+    <div class="section-label">See it in action</div>
+    <h2 class="section-title">Terminal Demo</h2>
+    <p class="section-sub">Run from your terminal with a single command. Requires root/administrator privileges for packet capture.</p>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="terminal-title">bash — SuperShield</span>
+      </div>
+      <div class="terminal-body"><pre>
+<span class="t-prompt">$</span> <span class="t-cmd">sudo python main.py sniff --dashboard</span>
+
+<span class="t-head">================================================================</span>
+<span class="t-head">  SuperShield — Personal Firewall Monitor</span>
+<span class="t-head">================================================================</span>
+<span class="t-info">  Uptime : 00:01:42   Log : firewall.log</span>
+<span class="t-head">================================================================</span>
+<span class="t-info">  Total Packets : 214        Allowed : 187        Blocked : 27</span>
+<span class="t-head">================================================================</span>
+<span class="t-info">  Protocols : ICMP=12   TCP=141   UDP=61</span>
+<span class="t-head">================================================================</span>
+<span class="t-info">  Blocked IPs  (3) : 192.0.2.1, 192.0.2.2, 198.51.100.0/24</span>
+<span class="t-head">================================================================</span>
+  Recent Packets:
+<span class="t-allow">    [ALLOW]</span>   TCP    192.168.1.5          -> 140.82.121.4        len=74
+<span class="t-block">    [BLOCK]</span>   TCP    192.0.2.1            -> 192.168.1.1         len=60
+<span class="t-allow">    [ALLOW]</span>   UDP    192.168.1.8          -> 8.8.8.8              len=83
+<span class="t-block">    [BLOCK]</span>   ICMP   198.51.100.25        -> 192.168.1.5         len=28
+<span class="t-allow">    [ALLOW]</span>   TCP    192.168.1.10         -> 93.184.216.34        len=52
+<span class="t-head">================================================================</span>
+  [Ctrl+C to stop]</pre>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem;font-size:1rem;color:var(--muted)">Other CLI commands</h3>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span class="terminal-title">bash</span>
+        </div>
+        <div class="terminal-body"><pre>
+<span class="t-info"># Block an IP or CIDR range</span>
+<span class="t-prompt">$</span> <span class="t-cmd">python main.py block 203.0.113.50</span>
+<span class="t-allow">[+] 203.0.113.50 added to blocklist.</span>
+
+<span class="t-info"># Block a website via hosts file</span>
+<span class="t-prompt">$</span> <span class="t-cmd">sudo python main.py block-site facebook.com</span>
+<span class="t-allow">[+] facebook.com has been blocked.</span>
+
+<span class="t-info"># Launch the GUI dashboard</span>
+<span class="t-prompt">$</span> <span class="t-cmd">sudo python main.py gui</span>
+
+<span class="t-info"># List all blocked IPs</span>
+<span class="t-prompt">$</span> <span class="t-cmd">python main.py list-blocked</span>
+<span class="t-info">Blocked IPs:
+  192.0.2.1
+  192.0.2.2
+  198.51.100.0/24
+  203.0.113.50</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section style="background:var(--surface)">
+  <div class="container">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Architecture</h2>
+    <p class="section-sub">Six focused modules, each with a single responsibility, wired together in <code style="color:var(--accent2)">main.py</code>.</p>
+    <div class="arch-grid">
+      <div class="arch-box">
+        <div class="arch-icon">📡</div>
+        <h4>PacketSniffer</h4>
+        <p>Scapy sniff() on a background thread. Parses IP/TCP/UDP headers.</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">
+        <div class="arch-icon">⚙️</div>
+        <h4>FirewallRules</h4>
+        <p>Evaluates each packet against the IP blocklist and custom rules in order.</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">
+        <div class="arch-icon">📋</div>
+        <h4>FirewallLogger</h4>
+        <p>Writes structured allow/block entries to firewall.log via Python logging.</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">
+        <div class="arch-icon">📊</div>
+        <h4>Monitor</h4>
+        <p>Keeps rolling packet history and running totals for the dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="container">
+    <div class="section-label">Get started</div>
+    <h2 class="section-title">Installation</h2>
+    <p class="section-sub">Runs on Windows, Linux, and macOS. Requires Python 3.9+ and administrator/root privileges for packet capture.</p>
+    <div class="install-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Clone the repository</h4>
+          <code>git clone https://github.com/sitanshusingh01/SuperShield-Building-a-Custom-Personal-Firewall-using-Python.git
+cd SuperShield-Building-a-Custom-Personal-Firewall-using-Python</code>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Create a virtual environment (recommended)</h4>
+          <code>python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate</code>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Install dependencies</h4>
+          <code>pip install -r requirements.txt</code>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Start the firewall (CLI or GUI)</h4>
+          <code>sudo python main.py sniff --dashboard   # Terminal dashboard
+sudo python main.py gui                 # Desktop GUI</code>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:1.2rem;color:var(--muted);font-size:.88rem">
+      On Windows, install <a href="https://npcap.com" target="_blank">Npcap</a> before running Scapy.
+      On Linux you may need <code style="color:var(--accent2)">sudo apt-get install libpcap-dev</code>.
+    </p>
+  </div>
+</section>
+
+<!-- GUI SECTION -->
+<section id="gui" style="background:var(--surface)">
+  <div class="container">
+    <div class="section-label">Desktop Interface</div>
+    <h2 class="section-title">GUI Dashboard</h2>
+    <p class="section-sub">Launch a full desktop interface with <code style="color:var(--accent2)">sudo python main.py gui</code>. No browser required.</p>
+    <div class="gui-preview">
+      <div class="gui-header-mock">
+        <span>🛡 SuperShield — Personal Firewall</span>
+        <div style="display:flex;gap:.5rem">
+          <button style="background:#22c55e;color:#fff;border:none;border-radius:5px;padding:.3rem .8rem;font-weight:700;cursor:pointer">▶ Start</button>
+          <button style="background:#ef4444;color:#fff;border:none;border-radius:5px;padding:.3rem .8rem;font-weight:700;cursor:pointer">■ Stop</button>
+        </div>
+      </div>
+      <div class="gui-body-mock">
+        <div class="gui-sidebar">
+          <div style="color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.08em">STATISTICS</div>
+          <div class="gui-stat-box"><div class="lbl">Total Packets</div><div class="val" style="color:var(--text)">214</div></div>
+          <div class="gui-stat-box"><div class="lbl">Allowed</div><div class="val" style="color:var(--green)">187</div></div>
+          <div class="gui-stat-box"><div class="lbl">Blocked</div><div class="val" style="color:var(--red)">27</div></div>
+          <div class="gui-stat-box"><div class="lbl">Uptime</div><div class="val" style="color:var(--yellow);font-size:1.1rem">00:01:42</div></div>
+          <div style="color:var(--green);font-size:.85rem;font-weight:700;text-align:center;margin-top:.4rem">● Running</div>
+        </div>
+        <div class="gui-main">
+          <div style="color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.08em;margin-bottom:.5rem">LIVE TRAFFIC</div>
+          <div class="gui-row"><span class="tag-allow">ALLOW</span><span style="color:var(--muted);width:50px">TCP</span><span>192.168.1.5 → 140.82.121.4</span></div>
+          <div class="gui-row"><span class="tag-block">BLOCK</span><span style="color:var(--muted);width:50px">TCP</span><span>192.0.2.1 → 192.168.1.1</span></div>
+          <div class="gui-row"><span class="tag-allow">ALLOW</span><span style="color:var(--muted);width:50px">UDP</span><span>192.168.1.8 → 8.8.8.8</span></div>
+          <div class="gui-row"><span class="tag-block">BLOCK</span><span style="color:var(--muted);width:50px">ICMP</span><span>198.51.100.25 → 192.168.1.5</span></div>
+          <div class="gui-row"><span class="tag-allow">ALLOW</span><span style="color:var(--muted);width:50px">TCP</span><span>192.168.1.10 → 93.184.216.34</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">Built with</div>
+    <h2 class="section-title">Tech Stack</h2>
+    <p class="section-sub">Pure Python, no heavy frameworks. Every dependency is either in the standard library or a well-known security tool.</p>
+    <div class="stack-grid">
+      <span class="stack-badge">🐍 Python 3.9+</span>
+      <span class="stack-badge">📡 Scapy</span>
+      <span class="stack-badge">🔌 psutil</span>
+      <span class="stack-badge">🖥 tkinter</span>
+      <span class="stack-badge">📋 logging</span>
+      <span class="stack-badge">⌨️ argparse</span>
+      <span class="stack-badge">🔀 threading</span>
+      <span class="stack-badge">🔢 socket</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>SuperShield — College Capstone Project &nbsp;·&nbsp;
+     <a href="https://github.com/sitanshusingh01/SuperShield-Building-a-Custom-Personal-Firewall-using-Python">GitHub Repository</a> &nbsp;·&nbsp;
+     MIT License</p>
+  <p style="margin-top:.5rem;font-size:.8rem">Built with Python · Scapy · tkinter</p>
+</footer>
+
+</body>
+</html>
