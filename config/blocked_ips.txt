@@ -1,0 +1,8 @@
+# SuperShield blocked IPs / CIDRs
+# Add one IP address or CIDR range per line
+# Lines beginning with # are treated as comments
+
+# Example malicious hosts (placeholders)
+192.0.2.1
+192.0.2.2
+198.51.100.0/24
