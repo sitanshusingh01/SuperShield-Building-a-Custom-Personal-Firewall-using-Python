@@ -15,6 +15,18 @@ from firewall.blocker import Blocker
 from firewall.monitor import Monitor
 from firewall.utils import format_packet_summary
 
+
+def cmd_gui(args):
+    try:
+        import tkinter as tk
+    except ImportError:
+        print("[!] tkinter is not available. Install it with your system package manager.")
+        print("    Ubuntu/Debian: sudo apt-get install python3-tk")
+        print("    macOS: included with the official Python installer from python.org")
+        sys.exit(1)
+    from firewall.gui import launch
+    launch()
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BLOCKED_IPS_PATH = os.path.join(BASE_DIR, "config", "blocked_ips.txt")
 LOG_PATH = os.path.join(BASE_DIR, "logs", "firewall.log")
@@ -264,6 +276,8 @@ def main():
 
     iface_parser = subparsers.add_parser("interfaces", help="List available network interfaces")
     iface_parser.set_defaults(func=lambda _: print("\n".join(PacketSniffer.list_interfaces()) or "None found"))
+
+    subparsers.add_parser("gui", help="Launch the tkinter GUI dashboard").set_defaults(func=cmd_gui)
 
     args = parser.parse_args()
     args.func(args)
