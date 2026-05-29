@@ -1,6 +1,5 @@
 # SuperShield — Custom Personal Firewall
 
-A Python-based personal firewall prototype that demonstrates real-time packet monitoring, IP blocking, website filtering, rule-based traffic control, and a live terminal dashboard. Built as a college capstone project to explore network security concepts using open-source tools.
 
 ---
 
